@@ -191,7 +191,7 @@
             <strong>Rules Active:</strong>
             <ul style="margin: 5px 0 0 15px; padding: 0;">
                 <li>No player sits 2 until all sit 1.</li>
-                <li>Everyone must play 1 inning Infield.</li>
+                <li>No infield/outfield position requirement.</li>
                 <li id="benchCountNote" aria-live="polite"></li>
             </ul>
         </div>
@@ -230,7 +230,21 @@
                 <button class="ctrl-btn btn-minus" onclick="updatePitch(-1)">−</button>
                 <button class="ctrl-btn btn-plus" onclick="updatePitch(1)">+ Pitch</button>
             </div>
-            <button class="action-btn btn-reset" onclick="if(confirm('Reset this pitcher\'s count?')) { updatePitch(-999); }">Reset Counter</button>
+            <button class="action-btn btn-reset" onclick="if(confirm('Reset this pitcher\'s count?')) { updatePitch(-999); }">Reset Pitch Count</button>
+
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #eee;">
+                <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 5px;">Innings Pitched Today</div>
+                <div class="pitch-display" id="inningDisplay" style="font-size: 3.5rem;">0</div>
+                <div style="margin: 10px 0; padding: 12px; background: #f8f9fa; border-radius: 10px; min-height: 44px;" id="inningLimitDisplay">
+                    <span style="font-size: 0.9rem; color: #666;">3+ inn = rest tomorrow · 6 inn max/day · 8 inn max/tournament</span>
+                </div>
+                <div class="controls" style="margin-top: 5px;">
+                    <button class="ctrl-btn btn-minus" onclick="updateInnings(-1)">−</button>
+                    <button class="ctrl-btn btn-plus" onclick="updateInnings(1)">+ Inn</button>
+                </div>
+                <button class="action-btn btn-reset" onclick="if(confirm('Reset innings for this pitcher?')) { updateInnings(-999); }">Reset Innings</button>
+            </div>
+
             <button class="action-btn btn-share" onclick="saveGameRecord()">Save Record 💾</button>
             <button class="action-btn btn-reset" onclick="exportGameRecords()">Export Records 📥</button>
             <button class="action-btn btn-share" onclick="printPDF()">Print PDF 📄</button>
@@ -694,17 +708,12 @@
 
             // VALIDATION LOGIC
             let sits = playerSits[player.name] || 0;
-            let infieldCount = fieldingData[player.name].filter(pos => INFIELD_POS.includes(pos)).length;
             
             let isSitViolator = (sits > minSits + 1) || (maxFairSits > 0 && sits > maxFairSits);
-            let needsInfield = (infieldCount === 0);
             
             if (isSitViolator) {
                 rowClass = "row-err";
                 statusHtml = `<span class="status-text stat-err">Sit violation</span>`;
-            } else if (needsInfield) {
-                rowClass = "row-warn";
-                statusHtml = `<span class="status-text stat-warn">Needs Infield</span>`;
             } else {
                 statusHtml = `<span class="status-text stat-ok">Good</span>`;
             }
@@ -788,6 +797,10 @@
     // --- PITCH COUNT TRACKING (PER-PITCHER) ---
     let currentPitcher = null;
     let pitchCounts = {}; // { playerName: count, ... }
+    let inningCounts = {}; // { playerName: innings, ... }
+    const INNINGS_REST_THRESHOLD = 3;  // >3 innings pitched = must rest next day
+    const INNINGS_DAILY_MAX = 6;       // 6 innings max per day
+    const INNINGS_TOURNEY_MAX = 8;     // 8 innings max per tournament
     const thresholds = [ {l:20,r:"0 Days",n:"1 Day"}, {l:35,r:"1 Day",n:"2 Days"}, {l:50,r:"2 Days",n:"3 Days"}, {l:65,r:"3 Days",n:"4 Days"}, {l:85,r:"4 Days",n:"MAX"} ];
     
     // --- SCHEDULE DATA ---
@@ -867,11 +880,21 @@
                 pitchCounts = {};
             }
         }
+        // Load inning counts for all players from localStorage
+        const savedInnings = localStorage.getItem('hawksInningCounts_v1');
+        if (savedInnings) {
+            try {
+                inningCounts = JSON.parse(savedInnings);
+            } catch(e) {
+                inningCounts = {};
+            }
+        }
         // Set first player as current pitcher if available
         if (currentRosterOrder.length > 0) {
             currentPitcher = currentRosterOrder[0].name;
             renderPitcherSelect();
             updatePitchDisplay();
+            updateInningsDisplay();
         }
     }
     
@@ -879,13 +902,14 @@
         const select = document.getElementById('pitcherSelect');
         if (!select) return;
         select.innerHTML = currentRosterOrder.map(p => 
-            `<option value="${p.name}" ${p.name === currentPitcher ? 'selected' : ''}>${p.name} (${pitchCounts[p.name] || 0})</option>`
+            `<option value="${p.name}" ${p.name === currentPitcher ? 'selected' : ''}>${p.name} (${pitchCounts[p.name] || 0}p / ${inningCounts[p.name] || 0}inn)</option>`
         ).join('');
     }
     
     function switchPitcher(playerName) {
         currentPitcher = playerName;
         updatePitchDisplay();
+        updateInningsDisplay();
     }
     
     function updatePitch(c) {
@@ -911,6 +935,46 @@
         document.getElementById('restDisplay').innerText = count>=85 ? "MAX LIMIT" : s.r + " Rest";
         document.getElementById('thresholdDisplay').innerText = count>=85 ? "Finish batter only" : `${n - count} until ${s.n} Rest`;
     }
+
+    function updateInnings(delta) {
+        if (!currentPitcher) return;
+        if (!inningCounts[currentPitcher]) inningCounts[currentPitcher] = 0;
+        if (delta === -999) {
+            inningCounts[currentPitcher] = 0;
+        } else {
+            inningCounts[currentPitcher] = Math.max(0, inningCounts[currentPitcher] + delta);
+        }
+        localStorage.setItem('hawksInningCounts_v1', JSON.stringify(inningCounts));
+        updateInningsDisplay();
+        renderPitcherSelect();
+    }
+
+    function updateInningsDisplay() {
+        const innings = inningCounts[currentPitcher] || 0;
+        const el = document.getElementById('inningDisplay');
+        const limitEl = document.getElementById('inningLimitDisplay');
+        if (!el || !limitEl) return;
+        el.innerText = innings;
+        let msg = '';
+        let color = '#666';
+        if (innings >= INNINGS_TOURNEY_MAX) {
+            msg = '🚫 Tournament max reached (' + INNINGS_TOURNEY_MAX + ' inn)';
+            color = '#d32f2f';
+        } else if (innings >= INNINGS_DAILY_MAX) {
+            msg = '🚫 Daily max reached (' + INNINGS_DAILY_MAX + ' inn) – ' + (INNINGS_TOURNEY_MAX - innings) + ' inn until tournament max';
+            color = '#d32f2f';
+        } else if (innings > INNINGS_REST_THRESHOLD) {
+            msg = '⚠️ Must rest tomorrow – ' + (INNINGS_DAILY_MAX - innings) + ' inn until daily max';
+            color = '#e65100';
+        } else if (innings === INNINGS_REST_THRESHOLD) {
+            msg = '⚠️ At rest threshold – 1 more inn requires rest tomorrow · ' + (INNINGS_DAILY_MAX - innings) + ' inn until daily max';
+            color = '#e65100';
+        } else {
+            msg = (INNINGS_REST_THRESHOLD - innings) + ' inn until rest-day threshold · ' + (INNINGS_DAILY_MAX - innings) + ' inn until daily max';
+        }
+        el.style.color = color;
+        limitEl.innerHTML = '<span style="color: ' + color + '; font-weight: bold;">' + msg + '</span>';
+    }
     function switchTab(id) {
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -918,6 +982,7 @@
         const map = { 'lineup': 0, 'fielding': 1, 'rules': 2, 'counter': 3, 'schedule': 4, 'settings': 5 };
         if(document.querySelectorAll('.tab-btn')[map[id]]) document.querySelectorAll('.tab-btn')[map[id]].classList.add('active');
         if(id === 'fielding') renderFielding();
+        if(id === 'counter') { updatePitchDisplay(); updateInningsDisplay(); }
     }
 
     // --- SAVE / EXPORT GAME RECORDS ---
