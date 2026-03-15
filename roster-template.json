@@ -1,0 +1,31 @@
+{
+  "order": [
+    { "name": "Jace Ingram", "number": "#3", "pos": "" },
+    { "name": "Jaxson Fonseca", "number": "#29", "pos": "" },
+    { "name": "JD Mayberry", "number": "#51", "pos": "" },
+    { "name": "Adam Enriquez", "number": "", "pos": "" },
+    { "name": "Blake Taylor", "number": "", "pos": "" },
+    { "name": "Brooks Schott", "number": "", "pos": "" },
+    { "name": "Declan Riley", "number": "", "pos": "" },
+    { "name": "Donovan Cox", "number": "", "pos": "" },
+    { "name": "Giovani Preciado", "number": "", "pos": "" },
+    { "name": "Landon Hodgson", "number": "", "pos": "" },
+    { "name": "Myles Gonzalez", "number": "", "pos": "" },
+    { "name": "Thomas Cabral", "number": "", "pos": "" }
+  ],
+  "fielding": {
+    "Jace Ingram": ["", "", "", "", "", ""],
+    "Jaxson Fonseca": ["", "", "", "", "", ""],
+    "JD Mayberry": ["", "", "", "", "", ""],
+    "Adam Enriquez": ["", "", "", "", "", ""],
+    "Blake Taylor": ["", "", "", "", "", ""],
+    "Brooks Schott": ["", "", "", "", "", ""],
+    "Declan Riley": ["", "", "", "", "", ""],
+    "Donovan Cox": ["", "", "", "", "", ""],
+    "Giovani Preciado": ["", "", "", "", "", ""],
+    "Landon Hodgson": ["", "", "", "", "", ""],
+    "Myles Gonzalez": ["", "", "", "", "", ""],
+    "Thomas Cabral": ["", "", "", "", "", ""]
+  },
+  "out": []
+}

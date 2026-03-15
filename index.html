@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>San Diego Hawks Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="./hawks-data.js"></script>
+    <style>
+        :root {
+            /* HAWKS THEME */
+            --primary: #002244; --secondary: #FFD700; --bg: #f4f4f4;
+            --card-bg: #ffffff; --text: #002244; --warning: #d32f2f; --gc-blue: #0086d1;
+            /* STATUS COLORS */
+            --ok: #2e7d32; --warn: #ef6c00; --error: #c62828;
+            --bench-bg: #e0e0e0; --infield-bg: #e8f5e9; --outfield-bg: #fff;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 80px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 10px; display: none; }
+        .container.loaded { display: block; }
+        #loadingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--text); font-size: 1.2rem; text-align: center; z-index: 2000; }
+        .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .header-img { width: 100%; height: auto; display: block; margin-bottom: 10px; border-bottom: 4px solid var(--secondary); }
+
+        /* TABS */
+        .nav-tabs { display: flex; background: var(--primary); padding: 5px; border-radius: 12px; margin-bottom: 15px; position: sticky; top: 5px; z-index: 100; gap: 3px; }
+        .tab-btn { flex: 1; border: none; background: transparent; padding: 10px 2px; font-size: 0.7rem; font-weight: bold; color: #ccc; border-radius: 6px; cursor: pointer; text-transform: uppercase; }
+        .tab-btn.active { background: var(--secondary); color: var(--primary); }
+        .view-section { display: none; } .view-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* LINEUP */
+        .lineup-list { list-style: none; padding: 0; margin: 0; }
+        .lineup-item { background: white; padding: 8px 10px; margin-bottom: 6px; border-radius: 8px; display: flex; align-items: center; border-left: 5px solid var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.1); touch-action: pan-y; }
+        .player-order { font-weight: bold; color: var(--secondary); background: var(--primary); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; margin-right: 8px; flex-shrink: 0; }
+        .player-info { flex: 1; display: flex; align-items: center; overflow: hidden; }
+        .player-name { font-weight: bold; color: var(--primary); font-size: 0.95rem; margin-right: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-num { font-size: 0.8rem; color: #888; flex-shrink: 0; }
+        .pos-select-lineup { padding: 5px 2px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; font-weight: bold; width: 50px; text-align: center; margin-right: 10px; }
+        .drag-handle { color: #ccc; font-size: 1.4rem; padding: 5px 10px; margin-right: -5px; cursor: grab; }
+
+        /* FIELDING MATRIX (SMART) */
+        .fielding-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 5px; }
+        .fielding-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .fielding-table th { background: var(--primary); color: white; padding: 8px; font-size: 0.8rem; text-align: center; position: sticky; left: 0; z-index: 10; }
+        .fielding-table th:not(:first-child) { background: #0a3a6b; position: static; }
+        .fielding-table td { border-bottom: 1px solid #eee; padding: 4px; text-align: center; }
+        
+        /* Sticky Name Column & Status */
+        .fielding-table td:first-child { 
+            position: sticky; left: 0; background: white; z-index: 5; 
+            font-weight: bold; font-size: 0.75rem; border-right: 2px solid #eee; 
+            text-align: left; padding-left: 5px; min-width: 100px; 
+            color: var(--primary);
+        }
+        
+        .pos-select-small { width: 100%; padding: 8px 0; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem; text-align: center; font-weight: bold; color: #333; -webkit-appearance: none; }
+        
+        /* Position Color Coding */
+        .pos-bn { background-color: var(--bench-bg); color: #666; border-color: #999; }
+        .pos-infield { background-color: var(--infield-bg); color: #004d40; border-color: #a5d6a7; }
+        .pos-outfield { background-color: #fff; color: #333; }
+
+        /* Status Indicators */
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+        .status-text { display: block; font-size: 0.65rem; font-weight: normal; margin-top: 2px; }
+        .stat-ok { color: var(--ok); }
+        .stat-warn { color: var(--warn); }
+        .stat-err { color: var(--error); }
+        .row-err td:first-child { background-color: #ffebee; border-left: 3px solid var(--error); }
+        .row-warn td:first-child { background-color: #fff3e0; border-left: 3px solid var(--warn); }
+
+        /* GENERIC UI */
+        .action-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px; }
+        .btn-share { background: var(--secondary); color: var(--primary); }
+        .btn-reset { background: white; border: 1px solid #ccc; color: #666; font-size: 0.9rem; }
+        .rule-card { background: var(--card-bg); padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .rule-card.important { border-left-color: var(--warning); border-right: 1px solid var(--warning); }
+        .rule-card h2 { margin: 0; font-size: 1rem; color: var(--primary); display: flex; justify-content: space-between; }
+        .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+        .filter-btn { background: #e0e0e0; border: none; padding: 8px 14px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 0.85rem; }
+        .filter-btn.active { background: var(--primary); color: var(--secondary); }
+        .counter-card { background: white; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--primary); }
+        .pitch-display { font-size: 5rem; font-weight: bold; color: var(--primary); line-height: 1; margin: 10px 0; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .ctrl-btn { border: none; padding: 15px; border-radius: 12px; font-size: 1.5rem; cursor: pointer; }
+        .btn-minus { background: #e0e0e0; color: #333; }
+        .btn-plus { background: var(--primary); color: var(--secondary); font-weight: bold; }
+        .tab-link { text-decoration: none; display: flex; align-items: center; justify-content: center; }
+        .schedule-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--secondary); }
+
+        /* OUT player */
+        .out-toggle { padding: 3px 8px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; font-size: 0.75rem; font-weight: bold; cursor: pointer; margin-right: 5px; flex-shrink: 0; }
+        .out-toggle.is-out { background: #d32f2f; color: white; border-color: #d32f2f; }
+        .song-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0 4px; flex-shrink: 0; text-decoration: none; line-height: 1; }
+        .player-is-out .player-name { text-decoration: line-through; color: #999; }
+        .player-is-out .player-num { color: #bbb; }
+        .row-out td:not(:first-child) { opacity: 0.35; pointer-events: none; }
+        .row-out td:first-child { background-color: #f5f5f5 !important; color: #999; }
+
+        /* CREDENTIALS MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-dialog { background: white; border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .modal-dialog h2 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.5rem; }
+        .modal-dialog p { color: #666; margin: 10px 0; font-size: 0.95rem; }
+        .modal-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; font-family: monospace; font-size: 0.9rem; box-sizing: border-box; }
+        .modal-input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(255, 196, 37, 0.2); }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .modal-btn-primary { background: var(--secondary); color: var(--primary); }
+        .modal-btn-secondary { background: #e0e0e0; color: #333; }
+
+        /* SETTINGS PANEL */
+        .settings-section { background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .settings-section h3 { margin: 0 0 10px 0; color: var(--primary); font-size: 1.1rem; border-bottom: 2px solid var(--secondary); padding-bottom: 8px; }
+        .settings-field { margin-bottom: 12px; }
+        .settings-label { display: block; font-weight: bold; color: var(--primary); margin-bottom: 6px; font-size: 0.9rem; }
+        .settings-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; }
+        .settings-input:focus { outline: none; border-color: var(--secondary); }
+        .settings-text { color: #666; font-size: 0.85rem; line-height: 1.4; margin-top: 5px; }
+        .settings-masked { font-family: monospace; background: #f5f5f5; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        .cred-status { padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 0.9rem; }
+        .cred-status.ok { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+        .cred-status.empty { background: #fff3e0; color: #e65100; border-left: 4px solid #e65100; }
+        
+        /* SCHEDULE STYLING */
+        .schedule-month-header { font-weight: bold; color: white; background: var(--primary); padding: 12px; margin-top: 15px; margin-bottom: 10px; border-radius: 6px; font-size: 1.1rem; }
+        .schedule-event { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .schedule-event.game { border-left-color: #d32f2f; background: #fff5f5; }
+        .schedule-event.practice { border-left-color: #2196F3; background: #f0f8ff; }
+        .schedule-event.special { border-left-color: #FF9800; background: #fff8f0; }
+        .schedule-day { font-weight: bold; font-size: 1rem; color: var(--primary); margin-bottom: 4px; }
+        .schedule-type { font-weight: bold; color: #666; font-size: 0.95rem; }
+        .schedule-location { font-size: 0.85rem; color: #999; margin: 4px 0; }
+        .schedule-time { font-weight: bold; color: var(--secondary); font-size: 1rem; }
+        
+        /* MOBILE OPTIMIZATION */
+        @media (max-width: 768px) {
+            .fielding-table { min-width: 100%; font-size: 0.85rem; }
+            .fielding-table th { padding: 10px 2px; font-size: 0.7rem; }
+            .fielding-table td { padding: 8px 2px; }
+            .fielding-table td:first-child { 
+                min-width: 85px; 
+                font-size: 0.8rem;
+                padding-left: 3px;
+            }
+            .pos-select-small { 
+                padding: 10px 0; 
+                font-size: 0.75rem;
+                min-height: 32px;
+            }
+            .status-text { font-size: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+    <div style="text-align: center;">
+        <div class="spinner"></div>
+        <div>Loading team roster...</div>
+    </div>
+</div>
+
+<img src="https://www.sandiegohawks.com/uploads/1/2/1/4/121496622/published/hawks-circle-logo-color-800-600.png" alt="Hawks Header" class="header-img">
+
+<div class="container">
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('lineup')">Lineup</button>
+        <button class="tab-btn" onclick="switchTab('fielding')">Fielding</button>
+        <button class="tab-btn" onclick="switchTab('rules')">Rules</button>
+        <button class="tab-btn" onclick="switchTab('counter')">Pitch</button>
+        <button class="tab-btn" onclick="switchTab('schedule')">Sched</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️</button>
+        <a href="hawks-bingo.html" class="tab-btn tab-link">🎱 Bingo</a>
+    </div>
+
+    <div id="view-lineup" class="view-section active">
+        <div style="background: #fff; padding: 8px; border-radius: 8px; margin-bottom: 10px; text-align: center; font-size: 0.8rem; color: #666;">
+            Touch <strong>≡</strong> to drag. Auto-syncs with Fielding tab.
+        </div>
+        <ul class="lineup-list" id="lineupContainer"></ul>
+        <button class="action-btn btn-share" onclick="shareLineup()">Share Lineup 📤</button>
+        <button class="action-btn btn-reset" onclick="resetLineup()">Reset Order</button>
+    </div>
+
+    <div id="view-fielding" class="view-section">
+        <div class="rule-card important" style="font-size: 0.85rem; padding: 10px;">
+            <strong>Rules Active:</strong>
+            <ul style="margin: 5px 0 0 15px; padding: 0;">
+                <li>No player sits 2 until all sit 1.</li>
+                <li>Everyone must play 1 inning Infield.</li>
+                <li id="benchCountNote" aria-live="polite"></li>
+            </ul>
+        </div>
+        <div class="fielding-container">
+            <table class="fielding-table" id="fieldingTable"></table>
+        </div>
+        <button class="action-btn btn-share" onclick="shareFielding()">Share Fielding 📤</button>
+        <button class="action-btn btn-reset" onclick="resetFielding()">Clear All Positions</button>
+    </div>
+
+    <div id="view-rules" class="view-section">
+        <div class="search-container"><input type="text" id="searchInput" placeholder="Search rules..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-bottom:15px;"></div>
+        <div class="filters" id="filterContainer">
+            <button class="filter-btn active" onclick="filterRules('All')">All</button>
+            <button class="filter-btn" onclick="filterRules('Pitching')">Pitching</button>
+            <button class="filter-btn" onclick="filterRules('Manager')">Manager</button>
+            <button class="filter-btn" onclick="filterRules('Game Time')">Time</button>
+            <button class="filter-btn" onclick="filterRules('Roster & Batting')">Roster</button>
+        </div>
+        <div id="rulesContainer"></div>
+    </div>
+
+    <div id="view-counter" class="view-section">
+        <div class="counter-card">
+            <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 10px;">Pitcher</div>
+            <select id="pitcherSelect" class="settings-input" onchange="switchPitcher(this.value)" style="margin-bottom: 15px; font-weight: bold;"></select>
+            
+            <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; margin-top: 15px;">Pitch Count</div>
+            <div class="pitch-display" id="countDisplay">0</div>
+            <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                <span style="font-size: 1.5rem; font-weight: bold; color: var(--primary); display: block;" id="restDisplay">0 Days Rest</span>
+                <span style="font-size: 0.9rem; color: #666;" id="thresholdDisplay">20 pitches until 1 Day Rest</span>
+            </div>
+            <div class="controls">
+                <button class="ctrl-btn btn-minus" onclick="updatePitch(-1)">−</button>
+                <button class="ctrl-btn btn-plus" onclick="updatePitch(1)">+ Pitch</button>
+            </div>
+            <button class="action-btn btn-reset" onclick="if(confirm('Reset this pitcher\'s count?')) { updatePitch(-999); }">Reset Counter</button>
+            <button class="action-btn btn-share" onclick="saveGameRecord()">Save Record 💾</button>
+            <button class="action-btn btn-reset" onclick="exportGameRecords()">Export Records 📥</button>
+            <button class="action-btn btn-share" onclick="printPDF()">Print PDF 📄</button>
+        </div>
+    </div>
+
+    <div id="view-schedule" class="view-section">
+        <div style="text-align: center; margin-bottom: 15px;">
+            <a href="https://www.sandiegohawks.com/" target="_blank" style="background: var(--gc-blue); color: white; text-decoration: none; padding: 12px 25px; border-radius: 20px; font-weight: bold; display: inline-block;">🦅 San Diego Hawks</a>
+        </div>
+        <div id="scheduleContainer"></div>
+    </div>
+
+    <div id="view-settings" class="view-section">
+        <div class="settings-section">
+            <h3>🔐 JSONBin.io Credentials</h3>
+            <div id="credStatus" class="cred-status empty">No credentials stored</div>
+            <div class="settings-field">
+                <label class="settings-label">Master Key</label>
+                <input type="password" id="settingsMasterKey" class="settings-input" placeholder="Enter your JSONBin Master Key">
+                <div class="settings-text">Your Master Key allows saving new bins and managing your data.</div>
+            </div>
+            <div class="settings-field">
+                <label class="settings-label">Access Key</label>
+                <input type="password" id="settingsAccessKey" class="settings-input" placeholder="Enter your JSONBin Access Key">
+                <div class="settings-text">Your Access Key is used to load data from bins.</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn btn-share" style="flex:1; margin-top: 10px;" onclick="saveCredentials()">Save Credentials 🔒</button>
+                <button class="action-btn btn-reset" style="flex:1; margin-top: 10px;" onclick="clearCredentials()">Clear</button>
+            </div>
+            <div class="settings-text" style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 6px; border-left: 4px solid #ff9800;">
+                ⚠️ Your credentials are stored in browser localStorage for convenience. For better security, consider using environment variables if you deploy this app to a server.
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>☁️ Team Roster</h3>
+            <div class="settings-text" style="margin-bottom: 15px;">
+                <p style="margin: 5px 0;"><strong>The team roster and fielding configuration is managed by the manager.</strong></p>
+                <p style="margin: 5px 0;">Any changes you make are saved locally on your device only. To sync with the latest team configuration, click the button below.</p>
+            </div>
+            <button class="action-btn btn-reset" style="width: 100%;" onclick="loadDefaultsManual()">Sync with Team Roster 🔄</button>
+        </div>
+
+        <div class="settings-section">
+            <h3>👑 Admin Tools (Owner Only)</h3>
+            <div class="settings-text" style="margin-bottom: 15px;">
+                <p style="margin: 5px 0;"><strong>As the manager, use this to update the team roster and fielding for all users.</strong></p>
+                <p style="margin: 5px 0; font-size: 0.85rem; color: #999;">Changes made here will be saved to the cloud and visible to the entire team on their next sync.</p>
+            </div>
+            <button class="action-btn btn-share" style="width: 100%;" onclick="updateTeamRoster()">Update Team Roster ☁️</button>
+        </div>
+
+        <div class="settings-section">
+            <h3>📊 Sync Status</h3>
+            <div id="syncStatus" style="padding: 10px; background: #f5f5f5; border-radius: 6px; font-size: 0.9rem;">
+                <div style="color: #999;">Loading sync status...</div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>ℹ️ Quick Links</h3>
+            <div class="settings-text">
+                <p style="margin: 5px 0;"><strong>JSONBin.io Account:</strong> Visit <a href="https://jsonbin.io" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: bold;">jsonbin.io</a> to manage your bins and find your API keys.</p>
+                <p style="margin: 5px 0;"><strong>How to find your keys:</strong></p>
+                <ol style="margin: 5px 0; padding-left: 20px;">
+                    <li>Log in to jsonbin.io</li>
+                    <li>Go to Account settings (top right menu)</li>
+                    <li>Copy your Master Key and Access Key</li>
+                    <li>Paste them above and save</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- STATE ---
+    let currentRosterOrder = [];
+    let currentAudio = null;
+    let currentPlayingName = null;
+    let fieldingData = {};
+    let outPlayers = new Set();
+    let isReadOnly = false;
+    const POSITIONS = ["-", "P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "BN"];
+    const INFIELD_POS = ["P", "C", "1B", "2B", "3B", "SS"];
+
+    // --- JSONBIN.IO CLOUD SYNC ---
+    const JSONBIN_MASTER_KEY = '$2a$10$lHXsVzeaAxnn8lmS/qDtwu.MAqUD.td9wq3hdW4AMUdmEenOZDa0W';
+    const JSONBIN_ACCESS_KEY = '$2a$10$gY/gyIQz2SYB45aqDMiolOQTEnovWn805SrrGsCjUzIqJGPwIE1lG';
+    const JSONBIN_API = 'https://api.jsonbin.io/v3/b';
+    const DEFAULT_BIN_ID = '69a21a9443b1c97be9a4c2f3'; // Owner's shared roster
+    
+    // --- AUTO-SYNC TRACKING ---
+    let lastSyncTime = null;
+    let lastSyncState = null;
+    let apiCallsThisMonth = 0;
+    const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+    const MONTHLY_API_LIMIT = 500;
+    const API_WARNING_THRESHOLD = 0.8; // Warn at 80% usage
+    let syncTimer = null;
+
+    async function saveToCloud() {
+        const creds = getCredentials();
+        const masterKey = creds.masterKey || JSONBIN_MASTER_KEY;
+        const state = {
+            order: currentRosterOrder.map(p => ({ name: p.name, pos: p.pos || '', number: p.number })),
+            fielding: fieldingData,
+            out: [...outPlayers]
+        };
+        const res = await fetch(JSONBIN_API, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': masterKey,
+                'X-Bin-Name': 'hawks-lineup',
+                'X-Bin-Private': 'false'
+            },
+            body: JSON.stringify(state)
+        });
+        if (!res.ok) throw new Error('Cloud save failed: ' + res.status);
+        const data = await res.json();
+        return data.metadata.id;
+    }
+
+    async function loadFromCloud(binId) {
+        const creds = getCredentials();
+        const accessKey = creds.accessKey || JSONBIN_ACCESS_KEY;
+        const res = await fetch(JSONBIN_API + '/' + binId + '/latest', {
+            headers: { 'X-Access-Key': accessKey }
+        });
+        if (!res.ok) throw new Error('Cloud load failed: ' + res.status);
+        const data = await res.json();
+        return data.record;
+    }
+
+    function initSortable() {
+        new Sortable(document.getElementById('lineupContainer'), {
+            handle: '.drag-handle', animation: 150,
+            onEnd: function (evt) {
+                const movedItem = currentRosterOrder.splice(evt.oldIndex, 1)[0];
+                currentRosterOrder.splice(evt.newIndex, 0, movedItem);
+                saveLineup(); renderLineup();
+            }
+        });
+    }
+
+    function applyState(state, readOnly = true) {
+        const validNames = new Set(teamRoster.map(r => r.name));
+        outPlayers = new Set((state.out || []).filter(n => validNames.has(n)));
+        currentRosterOrder = (state.order || [])
+            .filter(p => validNames.has(p.name))
+            .map(p => {
+                const rosterEntry = teamRoster.find(r => r.name === p.name);
+                return { ...rosterEntry, ...p, songUrl: rosterEntry.songUrl };
+            });
+        const rawFielding = state.fielding || {};
+        fieldingData = {};
+        Object.keys(rawFielding).forEach(name => {
+            if (validNames.has(name)) fieldingData[name] = rawFielding[name];
+        });
+        isReadOnly = readOnly;
+    }
+
+    window.onload = async function() {
+        const params = new URLSearchParams(location.search);
+        const queryBinId = params.get('bin');
+        let isSharedUrl = queryBinId || (location.hash && location.hash.startsWith('#state='));
+        let loaded = false;
+
+        // Load credential status in settings
+        const creds = getCredentials();
+        updateCredentialStatus();
+
+        // Only show credential modal if NOT loading from a shared URL
+        if (!isSharedUrl && (!creds.masterKey || !creds.accessKey)) {
+            showCredentialModal();
+        }
+
+        // Try to load from URL parameter first
+        if (queryBinId) {
+            try {
+                const state = await loadFromCloud(queryBinId);
+                applyState(state);
+                loaded = true;
+            } catch(e) {
+                console.error('Cloud load failed:', e);
+            }
+        }
+
+        // If not loaded from URL, try URL hash
+        if (!loaded) {
+            loaded = loadFromUrlHash();
+        }        // If still not loaded, try to load defaults from cloud if set
+        if (!loaded) {
+            const binId = getDefaultBinId();
+            if (binId && creds.accessKey) {
+                try {
+                    const res = await fetch(JSONBIN_API + '/' + binId + '/latest', {
+                        headers: { 'X-Access-Key': creds.accessKey }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        applyState(data.record, false);
+                        // Hide loading and show app now since data is loaded
+                        document.getElementById('loadingScreen').style.display = 'none';
+                        document.querySelector('.container').classList.add('loaded');
+                        renderLineup();
+                        renderFielding();
+                        initSortable();
+                        loaded = true;
+                        isReadOnly = false;
+                    }
+                } catch(e) {
+                    console.error('Auto-load defaults failed:', e);
+                }
+            }
+        }
+
+        if (loaded) {
+            renderLineup();
+            renderFielding();
+            // Only show read-only banner for shared URL loads
+            if (isReadOnly) {
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background:#FFD700;color:#002244;padding:10px;text-align:center;font-weight:bold;font-size:0.9rem;border-radius:8px;margin-bottom:10px;';
+                banner.textContent = '👀 Viewing a shared lineup (read-only)';
+                const container = document.querySelector('.container');
+                container.insertBefore(banner, container.querySelector('.nav-tabs'));
+            }
+            // Hide loading and show app
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.querySelector('.container').classList.add('loaded');
+        } else {
+            initOut();
+            initLineup();
+            initFielding();
+            initSortable();
+            // Hide loading and show app
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.querySelector('.container').classList.add('loaded');
+        }
+        initPitchCount();
+        renderRules(hawksRules);
+        renderSchedule();
+        startAutoSync();
+    };
+
+    // --- URL STATE SHARING ---
+    function encodeState() {
+        const state = {
+            order: currentRosterOrder.map(p => ({ name: p.name, pos: p.pos || '', number: p.number })),
+            fielding: fieldingData,
+            out: [...outPlayers]
+        };
+        try { return btoa(encodeURIComponent(JSON.stringify(state))); }
+        catch(e) { return null; }
+    }
+    function decodeState(encoded) {
+        try { return JSON.parse(decodeURIComponent(atob(encoded))); }
+        catch(e) { return null; }
+    }
+    function getShareUrl() {
+        const encoded = encodeState();
+        return encoded ? (location.origin + location.pathname + '#state=' + encoded) : location.href;
+    }
+    function loadFromUrlHash() {
+        const hash = location.hash.slice(1);
+        if (!hash.startsWith('state=')) return false;
+        const state = decodeState(hash.slice(6));
+        if (!state) return false;
+        applyState(state);
+        return true;
+    }
+
+    // --- LINEUP ---
+    function initLineup() {
+        const saved = localStorage.getItem('hawksLineup_v1');
+        if (saved) {
+            const savedOrder = JSON.parse(saved);
+            // Merge saved order with current roster to pick up new fields (e.g. songUrl)
+            currentRosterOrder = savedOrder.map(p => {
+                const rosterEntry = teamRoster.find(r => r.name === p.name) || {};
+                return {...rosterEntry, ...p, songUrl: rosterEntry.songUrl};
+            });
+        } else {
+            currentRosterOrder = teamRoster.map(p => ({...p, pos: ""}));
+        }
+        // Reconcile: players in outPlayers should have pos === 'OUT'
+        currentRosterOrder.forEach(p => {
+            if (outPlayers.has(p.name)) p.pos = 'OUT';
+        });
+        renderLineup();
+    }
+    function renderLineup() {
+        document.getElementById('lineupContainer').innerHTML = currentRosterOrder.map((player, index) => {
+            const isOut = outPlayers.has(player.name);
+            const safeName = JSON.stringify(player.name); // properly escapes all special characters
+            const songUrl = player.songUrl || '';
+            const isPlaying = currentPlayingName === player.name;
+            const safeSongUrl = JSON.stringify(songUrl);
+            return `
+            <li class="lineup-item${isOut ? ' player-is-out' : ''}">
+                <div style="display:flex; align-items:center; flex:1; min-width:0;">
+                    <div class="player-order">${index + 1}</div>
+                    <div class="player-info"><span class="player-name">${player.name}</span><span class="player-num">${player.number}</span></div>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    ${songUrl ? `<button class="song-btn" onclick='toggleSong(${safeName}, ${safeSongUrl})' title="${isPlaying ? 'Stop' : 'Play'} walk-up song">${isPlaying ? '⏹' : '▶️'}</button>` : ''}
+                    <button class="out-toggle${isOut ? ' is-out' : ''}" onclick='toggleOut(${safeName})'>${isOut ? '✕ OUT' : 'OUT'}</button>
+                    <select class="pos-select-lineup" onchange="updateLineupPos(${index}, this.value)">
+                        <option value="" ${player.pos===""?'selected':''}>-</option>
+                        ${POSITIONS.slice(1).map(p => `<option value="${p}" ${player.pos===p?'selected':''}>${p}</option>`).join('')}
+                        <option value="OUT" ${player.pos==='OUT'?'selected':''}>OUT</option>
+                    </select>
+                    <div class="drag-handle">≡</div>
+                </div>
+            </li>`;
+        }).join('');
+    }
+    function updateLineupPos(index, value) {
+        const player = currentRosterOrder[index];
+        const wasOut = outPlayers.has(player.name);
+        if (value === 'OUT') {
+            outPlayers.add(player.name);
+        } else if (wasOut) {
+            outPlayers.delete(player.name);
+        }
+        player.pos = value;
+        saveLineup();
+        if (value === 'OUT' || wasOut) {
+            saveOut();
+            renderLineup();
+            renderFielding();
+        }
+    }
+    function saveLineup() { localStorage.setItem('hawksLineup_v1', JSON.stringify(currentRosterOrder)); }
+    function resetLineup() { if(confirm("Reset batting order?")) { currentRosterOrder = teamRoster.map(p => ({...p, pos: ""})); saveLineup(); renderLineup(); }}
+
+    // --- OUT STATUS ---
+    function initOut() {
+        const saved = localStorage.getItem('hawksOut_v1');
+        if (saved) outPlayers = new Set(JSON.parse(saved));
+    }
+    function saveOut() { localStorage.setItem('hawksOut_v1', JSON.stringify([...outPlayers])); }
+    function toggleOut(playerName) {
+        const player = currentRosterOrder.find(p => p.name === playerName);
+        if (outPlayers.has(playerName)) {
+            outPlayers.delete(playerName);
+            if (player && player.pos === 'OUT') player.pos = '';
+        } else {
+            outPlayers.add(playerName);
+            if (player) player.pos = 'OUT';
+        }
+        saveOut();
+        saveLineup();
+        renderLineup();
+        renderFielding();
+    }
+    async function shareLineup() {
+        let url;
+        try {
+            const binId = await saveToCloud();
+            url = location.origin + location.pathname + '?bin=' + binId;
+        } catch(e) {
+            url = getShareUrl();
+        }
+        let text = "⚾ Hawks Lineup:\n";
+        currentRosterOrder.forEach((p, i) => { text += `${i+1}. ${p.name} ${p.number} ${p.pos ? `(${p.pos})` : ""}\n`; });
+        if (navigator.share) navigator.share({ title: 'San Diego Hawks Lineup', text: text, url: url }).catch(console.error);
+        else navigator.clipboard.writeText(url).then(() => alert("Share link copied! Paste it to share with coaches.")).catch(() => { navigator.clipboard.writeText(text); alert("Lineup copied!"); });
+    }
+    function toggleSong(playerName, songUrl) {
+        if (currentPlayingName === playerName) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+            currentPlayingName = null;
+            renderLineup();
+            return;
+        }
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+        const audio = new Audio(encodeURI(songUrl));
+        audio.play().catch(console.error);
+        audio.onended = () => { currentAudio = null; currentPlayingName = null; renderLineup(); };
+        currentAudio = audio;
+        currentPlayingName = playerName;
+        renderLineup();
+    }
+
+    // --- SMART FIELDING MATRIX ---
+    function initFielding() {
+        const savedFielding = localStorage.getItem('hawksFielding_v1');
+        if (savedFielding) {
+            fieldingData = JSON.parse(savedFielding);
+            // Normalize any old 6-element arrays to 7 elements
+            let needsSave = false;
+            Object.keys(fieldingData).forEach(playerName => {
+                if (fieldingData[playerName].length < 7) {
+                    fieldingData[playerName] = [...fieldingData[playerName], ...Array(7 - fieldingData[playerName].length).fill("")];
+                    needsSave = true;
+                }
+            });
+            if (needsSave) {
+                localStorage.setItem('hawksFielding_v1', JSON.stringify(fieldingData));
+            }
+        }
+        else teamRoster.forEach(p => { fieldingData[p.name] = ["", "", "", "", "", "", ""]; });
+        renderFielding();
+    }
+    function renderFielding() {
+        const table = document.getElementById('fieldingTable');
+        
+        // Normalize all fielding arrays to 7 elements (fix for old 6-element arrays)
+        Object.keys(fieldingData).forEach(playerName => {
+            if (fieldingData[playerName].length < 7) {
+                fieldingData[playerName] = [...fieldingData[playerName], ...Array(7 - fieldingData[playerName].length).fill("")];
+            }
+        });
+        
+        // 1. Calculate Sit Counts (exclude OUT players)
+        let playerSits = {};
+        let minSits = 7; // Start high
+        currentRosterOrder.forEach(p => {
+            if (outPlayers.has(p.name)) return; // OUT players don't count toward bench fairness
+            let data = fieldingData[p.name] || ["","","","","","",""];
+            let sits = data.filter(pos => pos === "BN").length;
+            playerSits[p.name] = sits;
+            if(sits < minSits) minSits = sits;
+        });
+
+        // 2. Dynamic bench count based on active player count
+        const activePlayers = Object.keys(playerSits).length;
+        const benchPerInning = Math.max(0, activePlayers - 9);
+        const maxFairSits = (benchPerInning > 0 && activePlayers > 0)
+            ? Math.ceil((benchPerInning * 7) / activePlayers)
+            : 0;
+        const benchNote = document.getElementById('benchCountNote');
+        if (benchNote) {
+            if (activePlayers <= 9) {
+                benchNote.textContent = `${activePlayers} active player${activePlayers !== 1 ? 's' : ''} – everyone fields every inning.`;
+            } else {
+                benchNote.textContent = `${activePlayers} active players → ${benchPerInning} bench slot${benchPerInning !== 1 ? 's' : ''} per inning (max ${maxFairSits} sit${maxFairSits !== 1 ? 's' : ''} per player).`;
+            }
+        }
+
+        let html = `<thead><tr><th>Player</th>`;
+        for(let i=1; i<=7; i++) html += `<th>${i}</th>`;
+        html += `</tr></thead><tbody>`;
+
+        currentRosterOrder.forEach(player => {
+            if (outPlayers.has(player.name)) return; // OUT players are hidden from fielding
+            if (!fieldingData[player.name]) fieldingData[player.name] = ["", "", "", "", "", "", ""];
+            
+            let rowClass = "";
+            let statusHtml = "";
+
+            // VALIDATION LOGIC
+            let sits = playerSits[player.name] || 0;
+            let infieldCount = fieldingData[player.name].filter(pos => INFIELD_POS.includes(pos)).length;
+            
+            let isSitViolator = (sits > minSits + 1) || (maxFairSits > 0 && sits > maxFairSits);
+            let needsInfield = (infieldCount === 0);
+            
+            if (isSitViolator) {
+                rowClass = "row-err";
+                statusHtml = `<span class="status-text stat-err">Sit violation</span>`;
+            } else if (needsInfield) {
+                rowClass = "row-warn";
+                statusHtml = `<span class="status-text stat-warn">Needs Infield</span>`;
+            } else {
+                statusHtml = `<span class="status-text stat-ok">Good</span>`;
+            }
+
+            html += `<tr class="${rowClass}"><td>${player.name}${statusHtml}</td>`;
+            for(let i=0; i<7; i++) {
+                html += `<td>${createPosSelect(player.name, i, fieldingData[player.name][i], isReadOnly)}</td>`;
+            }
+            html += `</tr>`;
+        });
+        html += `</tbody>`;
+        table.innerHTML = html;
+    }
+    function createPosSelect(playerName, inningIndex, currentVal, readOnly = false) {
+        let bgClass = "pos-outfield";
+        if (currentVal === "BN") bgClass = "pos-bn";
+        else if (INFIELD_POS.includes(currentVal)) bgClass = "pos-infield";
+        
+        if (readOnly) {
+            return `<span class="pos-select-small ${bgClass}" style="pointer-events: none; cursor: default; background: #f0f0f0; color: #666;">${currentVal || '-'}</span>`;
+        }
+        
+        // Get positions already assigned in this inning (excluding BN and "-")
+        let positionsInInning = new Set();
+        currentRosterOrder.forEach(p => {
+            if (fieldingData[p.name] && fieldingData[p.name][inningIndex] && fieldingData[p.name][inningIndex] !== "-" && fieldingData[p.name][inningIndex] !== "BN") {
+                positionsInInning.add(fieldingData[p.name][inningIndex]);
+            }
+        });
+        
+        // Create options - disable field positions already used in this inning, but allow BN and "-" to be used multiple times
+        let opts = POSITIONS.map(p => {
+            const isUsed = positionsInInning.has(p) && p !== currentVal && p !== "-" && p !== "BN";
+            return `<option value="${p}" ${p===currentVal?'selected':''} ${isUsed ? 'disabled' : ''}>${p}</option>`;
+        }).join('');
+        return `<select class="pos-select-small ${bgClass}" onchange="updateFielding('${playerName}', ${inningIndex}, this.value)">${opts}</select>`;
+    }
+    function updateFielding(playerName, inningIndex, value) {
+        if (!fieldingData[playerName]) fieldingData[playerName] = ["", "", "", "", "", "", ""];
+        fieldingData[playerName][inningIndex] = value;
+        localStorage.setItem('hawksFielding_v1', JSON.stringify(fieldingData));
+        renderFielding(); // Re-render to update validation immediately
+    }
+    async function shareFielding() {
+        let url;
+        try {
+            const binId = await saveToCloud();
+            url = location.origin + location.pathname + '?bin=' + binId;
+        } catch(e) {
+            url = getShareUrl();
+        }
+        const innings = [1, 2, 3, 4, 5, 6, 7];
+        let text = "⚾ Hawks Fielding:\n";
+        text += "Player".padEnd(18) + innings.join("  ") + "\n";
+        currentRosterOrder.forEach(player => {
+            if (outPlayers.has(player.name)) return;
+            const data = fieldingData[player.name] || ["","","","","","",""];
+            const row = data.map(p => (p || "-").padEnd(3)).join(" ");
+            text += player.name.padEnd(18) + row + "\n";
+        });
+        if (navigator.share) navigator.share({ title: 'San Diego Hawks Fielding', text: text, url: url }).catch(console.error);
+        else navigator.clipboard.writeText(url).then(() => alert("Share link copied! Paste it to share with coaches.")).catch(() => navigator.clipboard.writeText(text).then(() => alert("Fielding copied!")).catch(() => alert("Could not copy. Please copy manually.")));
+    }
+    function resetFielding() {
+        if(confirm("Clear all positions?")) {
+            teamRoster.forEach(p => { fieldingData[p.name] = ["", "", "", "", "", "", ""]; });
+            localStorage.setItem('hawksFielding_v1', JSON.stringify(fieldingData));
+            renderFielding();
+        }
+    }
+
+    // --- UTILS ---
+    function renderRules(rules) { document.getElementById('rulesContainer').innerHTML = rules.map(r => `<div class="rule-card ${r.important ? 'important' : ''}"><h2>${r.title} <span class="category-tag">${r.category}</span></h2><p>${r.content}</p><div class="source">Source: ${r.source}</div></div>`).join(''); }
+    function filterRules(cat) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === cat));
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        renderRules(hawksRules.filter(r => (cat === 'All' || r.category === cat) && (r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q))));
+    }
+    document.getElementById('searchInput').addEventListener('input', () => filterRules('All'));
+    
+    // --- PITCH COUNT TRACKING (PER-PITCHER) ---
+    let currentPitcher = null;
+    let pitchCounts = {}; // { playerName: count, ... }
+    const thresholds = [ {l:20,r:"0 Days",n:"1 Day"}, {l:35,r:"1 Day",n:"2 Days"}, {l:50,r:"2 Days",n:"3 Days"}, {l:65,r:"3 Days",n:"4 Days"}, {l:85,r:"4 Days",n:"MAX"} ];
+    
+    // --- SCHEDULE DATA ---
+    const scheduleEvents = [
+        { month: 'January 2026', events: [
+            { date: 'TUE 27', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '6:30 PM' },
+            { date: 'SAT 31', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '1:00 PM' }
+        ]},
+        { month: 'February 2026', events: [
+            { date: 'TUE 3', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
+            { date: 'SAT 7', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '1:00 PM' },
+            { date: 'TUE 10', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
+            { date: 'SAT 14', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '1:00 PM' },
+            { date: 'TUE 24', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
+            { date: 'SAT 28', type: 'Game', opponent: 'vs. Rockies Bronco', location: 'EYB Fields at Kit Carson Park - Bronco', time: '5:15 PM' }
+        ]},
+        { month: 'March 2026', events: [
+            { date: 'TUE 3', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
+            { date: 'SAT 7', type: 'Game', opponent: '@ Orioles', location: 'EYB Fields at Kit Carson Park - Bronco', time: '5:15 PM' },
+            { date: 'SUN 8', type: 'Special', opponent: 'Picture Day and Hit-a-Thon', location: 'TBD', time: 'All Day' },
+            { date: 'TUE 10', type: 'Game', opponent: 'vs. Athletics', location: 'EYB Fields at Kit Carson Park - Mustang', time: '7:00 PM' },
+            { date: 'SAT 14', type: 'Game', opponent: '@ Pirates', location: 'EYB Fields at Kit Carson Park - Bronco', time: '3:00 PM' },
+            { date: 'TUE 17', type: 'Game', opponent: 'vs. White Sox', location: 'EYB Fields at Kit Carson Park - Bronco', time: '4:45 PM' },
+            { date: 'SAT 21', type: 'Game', opponent: '@ Blue Jays', location: 'EYB Fields at Kit Carson Park - Bronco', time: '12:45 PM' },
+            { date: 'TUE 24', type: 'Game', opponent: 'vs. Angels', location: 'EYB Fields at Kit Carson Park - Mustang', time: '4:45 PM' },
+            { date: 'SAT 28', type: 'Game', opponent: 'vs. Rockies Bronco', location: 'EYB Fields at Kit Carson Park - Bronco', time: '10:30 AM' },
+            { date: 'TUE 31', type: 'Game', opponent: '@ Orioles', location: 'EYB Fields at Kit Carson Park - Bronco', time: '7:00 PM' }
+        ]},
+        { month: 'April 2026', events: [
+            { date: 'TUE 14', type: 'Game', opponent: 'vs. Athletics', location: 'EYB Fields at Kit Carson Park - Mustang', time: '7:00 PM' },
+            { date: 'SAT 18', type: 'Game', opponent: '@ Pirates', location: 'EYB Fields at Kit Carson Park - Bronco', time: '3:00 PM' },
+            { date: 'TUE 21', type: 'Game', opponent: 'vs. White Sox', location: 'EYB Fields at Kit Carson Park - Bronco', time: '4:45 PM' },
+            { date: 'SAT 25', type: 'Game', opponent: '@ Blue Jays', location: 'EYB Fields at Kit Carson Park - Bronco', time: '10:30 AM' }
+        ]},
+        { month: 'May 2026', events: [
+            { date: 'SUN 3', type: 'Special', opponent: 'Pony Day at the Padres!', location: 'TBD', time: 'All Day' }
+        ]}
+    ];
+    
+    function renderSchedule() {
+        const container = document.getElementById('scheduleContainer');
+        if (!container) return;
+        
+        let html = '';
+        scheduleEvents.forEach(monthBlock => {
+            html += `<div class="schedule-month-header">${monthBlock.month}</div>`;
+            monthBlock.events.forEach(event => {
+                const type = event.type.toLowerCase();
+                const isGame = type === 'game';
+                const isPractice = type === 'practice';
+                const isSpecial = type === 'special';
+                let className = 'schedule-event';
+                if (isGame) className += ' game';
+                else if (isPractice) className += ' practice';
+                else if (isSpecial) className += ' special';
+                
+                html += `<div class="${className}">`;
+                html += `<div class="schedule-day">${event.date}</div>`;
+                const icon = isGame ? '⚾' : isPractice ? '🏃' : '🎉';
+                html += `<div class="schedule-type">${icon} ${event.type}</div>`;
+                if (event.opponent) html += `<div style="font-weight: bold; color: var(--primary); margin-top: 6px;">${event.opponent}</div>`;
+                if (event.location) html += `<div class="schedule-location">📍 ${event.location}</div>`;
+                html += `<div class="schedule-time">${event.time}</div>`;
+                html += `</div>`;
+            });
+        });
+        container.innerHTML = html;
+    }
+    
+    function initPitchCount() {
+        // Load pitch counts for all players from localStorage
+        const saved = localStorage.getItem('hawksPitchCounts_v1');
+        if (saved) {
+            try {
+                pitchCounts = JSON.parse(saved);
+            } catch(e) {
+                pitchCounts = {};
+            }
+        }
+        // Set first player as current pitcher if available
+        if (currentRosterOrder.length > 0) {
+            currentPitcher = currentRosterOrder[0].name;
+            renderPitcherSelect();
+            updatePitchDisplay();
+        }
+    }
+    
+    function renderPitcherSelect() {
+        const select = document.getElementById('pitcherSelect');
+        if (!select) return;
+        select.innerHTML = currentRosterOrder.map(p => 
+            `<option value="${p.name}" ${p.name === currentPitcher ? 'selected' : ''}>${p.name} (${pitchCounts[p.name] || 0})</option>`
+        ).join('');
+    }
+    
+    function switchPitcher(playerName) {
+        currentPitcher = playerName;
+        updatePitchDisplay();
+    }
+    
+    function updatePitch(c) {
+        if (!currentPitcher) return;
+        if (!pitchCounts[currentPitcher]) pitchCounts[currentPitcher] = 0;
+        
+        if (c === -999) {
+            pitchCounts[currentPitcher] = 0;
+        } else {
+            pitchCounts[currentPitcher] = Math.max(0, pitchCounts[currentPitcher] + c);
+        }
+        
+        localStorage.setItem('hawksPitchCounts_v1', JSON.stringify(pitchCounts));
+        updatePitchDisplay();
+        renderPitcherSelect();
+    }
+    
+    function updatePitchDisplay() {
+        const count = pitchCounts[currentPitcher] || 0;
+        document.getElementById('countDisplay').innerText = count;
+        let s = thresholds[0], n = thresholds[0].l;
+        if (count > 65) { s=thresholds[4]; n=85; } else if (count > 50) { s=thresholds[3]; n=65; } else if (count > 35) { s=thresholds[2]; n=50; } else if (count > 20) { s=thresholds[1]; n=35; }
+        document.getElementById('restDisplay').innerText = count>=85 ? "MAX LIMIT" : s.r + " Rest";
+        document.getElementById('thresholdDisplay').innerText = count>=85 ? "Finish batter only" : `${n - count} until ${s.n} Rest`;
+    }
+    function switchTab(id) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + id).classList.add('active');
+        const map = { 'lineup': 0, 'fielding': 1, 'rules': 2, 'counter': 3, 'schedule': 4, 'settings': 5 };
+        if(document.querySelectorAll('.tab-btn')[map[id]]) document.querySelectorAll('.tab-btn')[map[id]].classList.add('active');
+        if(id === 'fielding') renderFielding();
+    }
+
+    // --- SAVE / EXPORT GAME RECORDS ---
+    function saveGameRecord() {
+        const record = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString(),
+            pitcher: currentPitcher,
+            pitchCount: pitchCounts[currentPitcher] || 0,
+            allPitchCounts: {...pitchCounts},
+            lineup: currentRosterOrder.map((p, i) => ({
+                order: i + 1, name: p.name, number: p.number,
+                pos: p.pos || '', out: outPlayers.has(p.name)
+            })),
+            fielding: Object.keys(fieldingData).reduce((acc, k) => { acc[k] = fieldingData[k].slice(); return acc; }, {}),
+            outPlayers: [...outPlayers]
+        };
+        const records = JSON.parse(localStorage.getItem('hawksGameRecords') || '[]');
+        records.unshift(record);
+        localStorage.setItem('hawksGameRecords', JSON.stringify(records));
+        alert('Game record saved! ' + record.date + ' ' + record.time + ' (' + record.pitcher + ' - ' + record.pitchCount + ' pitches)');
+    }
+    function exportGameRecords() {
+        const records = JSON.parse(localStorage.getItem('hawksGameRecords') || '[]');
+        if (records.length === 0) { alert('No saved records yet. Use "Save Record 💾" first.'); return; }
+        const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'game-records.json';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+    
+    function printPDF() {
+        const printWindow = window.open('', '_blank');
+        const innings = [1, 2, 3, 4, 5, 6, 7];
+        let html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>San Diego Hawks Lineup & Fielding</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: white; }
+        h1 { text-align: center; color: #002244; border-bottom: 3px solid #FFD700; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #002244; color: white; font-weight: bold; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .section { page-break-inside: avoid; margin-bottom: 30px; }
+        .print-date { text-align: right; font-size: 0.9em; color: #666; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>⚾ San Diego Hawks Manager</h1>
+    <div class="print-date">Printed: ${new Date().toLocaleString()}</div>
+    
+    <div class="section">
+        <h2>Lineup</h2>
+        <table>
+            <thead>
+                <tr><th>#</th><th>Player</th><th>Number</th><th>Position</th></tr>
+            </thead>
+            <tbody>`;
+        
+        currentRosterOrder.forEach((p, i) => {
+            const isOut = outPlayers.has(p.name);
+            html += `<tr style="${isOut ? 'text-decoration: line-through; color: #999;' : ''}">
+                <td>${i + 1}</td>
+                <td>${p.name}</td>
+                <td>${p.number}</td>
+                <td>${p.pos || '-'}</td>
+            </tr>`;
+        });
+        
+        html += `</tbody></table></div>
+    
+    <div class="section">
+        <h2>Fielding (7 Innings)</h2>
+        <table>
+            <thead>
+                <tr><th>Player</th>`;
+        
+        innings.forEach(i => {
+            html += `<th>${i}</th>`;
+        });
+        
+        html += `</tr></thead><tbody>`;
+        
+        currentRosterOrder.forEach(p => {
+            if (outPlayers.has(p.name)) return;
+            const data = fieldingData[p.name] || ["", "", "", "", "", "", ""];
+            html += `<tr><td><strong>${p.name}</strong></td>`;
+            data.forEach(pos => {
+                html += `<td>${pos || '-'}</td>`;
+            });
+            html += `</tr>`;
+        });
+        
+        html += `</tbody></table></div>
+</body>
+</html>`;
+        
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    // --- AUTO-SYNC MANAGEMENT ---
+    function getCurrentStateString() {
+        return JSON.stringify({
+            order: currentRosterOrder.map(p => ({ name: p.name, pos: p.pos || '', number: p.number })),
+            fielding: fieldingData,
+            out: [...outPlayers]
+        });
+    }
+
+    function hasStateChanged() {
+        if (!lastSyncState) return true;
+        return getCurrentStateString() !== lastSyncState;
+    }
+
+    function updateSyncStatusDisplay() {
+        const statusEl = document.getElementById('syncStatus');
+        if (!statusEl) return;
+        
+        const usagePercent = ((apiCallsThisMonth / MONTHLY_API_LIMIT) * 100).toFixed(0);
+        const lastSyncText = lastSyncTime 
+            ? new Date(lastSyncTime).toLocaleTimeString() 
+            : 'Never';
+        
+        statusEl.innerHTML = `
+            <div style="font-size: 0.85rem; color: #666;">
+                Last synced: <strong>${lastSyncText}</strong><br>
+                API calls today: <strong>${apiCallsThisMonth} / ${MONTHLY_API_LIMIT}</strong> (${usagePercent}%)
+                ${apiCallsThisMonth > MONTHLY_API_LIMIT * API_WARNING_THRESHOLD 
+                    ? '<div style="color: #e65100; margin-top: 5px; font-weight: bold;">⚠️ Approaching API limit</div>' 
+                    : ''}
+            </div>
+        `;
+    }
+
+    async function periodicSync() {
+        if (isReadOnly || !hasStateChanged()) return;
+        
+        const creds = getCredentials();
+        if (!creds.masterKey || !creds.accessKey) return;
+        
+        try {
+            const state = {
+                order: currentRosterOrder.map(p => ({ name: p.name, pos: p.pos || '', number: p.number })),
+                fielding: fieldingData,
+                out: [...outPlayers]
+            };
+            
+            const res = await fetch(JSONBIN_API + '/' + DEFAULT_BIN_ID, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': creds.masterKey
+                },
+                body: JSON.stringify(state)
+            });
+            
+            if (res.ok) {
+                lastSyncTime = Date.now();
+                lastSyncState = getCurrentStateString();
+                apiCallsThisMonth += 1;
+                localStorage.setItem('hawksSyncStatus', JSON.stringify({
+                    lastSyncTime,
+                    apiCallsThisMonth,
+                    syncDate: new Date().toISOString().split('T')[0]
+                }));
+                updateSyncStatusDisplay();
+                console.log('✓ Auto-synced to cloud');
+            }
+        } catch(e) {
+            console.error('Auto-sync failed:', e);
+        }
+    }
+
+    function startAutoSync() {
+        // Load sync status from localStorage
+        const saved = localStorage.getItem('hawksSyncStatus');
+        if (saved) {
+            const status = JSON.parse(saved);
+            const today = new Date().toISOString().split('T')[0];
+            if (status.syncDate === today) {
+                apiCallsThisMonth = status.apiCallsThisMonth;
+                lastSyncTime = status.lastSyncTime;
+            } else {
+                // Reset counter for new day (assumes monthly budget resets daily for safety)
+                apiCallsThisMonth = 0;
+            }
+        }
+        
+        lastSyncState = getCurrentStateString();
+        
+        // Sync every 30 minutes
+        syncTimer = setInterval(() => {
+            periodicSync();
+        }, SYNC_INTERVAL);
+        
+        updateSyncStatusDisplay();
+    }
+
+    function stopAutoSync() {
+        if (syncTimer) {
+            clearInterval(syncTimer);
+            syncTimer = null;
+        }
+    }
+
+    // --- JSONBIN CREDENTIALS MANAGEMENT ---
+    function getCredentials() {
+        const creds = localStorage.getItem('jsonbin_credentials');
+        return creds ? JSON.parse(creds) : { masterKey: '', accessKey: '' };
+    }
+
+    function saveCredentials() {
+        const masterKey = document.getElementById('settingsMasterKey').value.trim();
+        const accessKey = document.getElementById('settingsAccessKey').value.trim();
+        if (!masterKey || !accessKey) {
+            alert('Please enter both Master Key and Access Key');
+            return;
+        }
+        localStorage.setItem('jsonbin_credentials', JSON.stringify({ masterKey, accessKey }));
+        updateCredentialStatus();
+        alert('Credentials saved! Your keys are stored securely in browser storage.');
+    }
+
+    function clearCredentials() {
+        if (confirm('Clear stored credentials? You can re-enter them later.')) {
+            localStorage.removeItem('jsonbin_credentials');
+            document.getElementById('settingsMasterKey').value = '';
+            document.getElementById('settingsAccessKey').value = '';
+            updateCredentialStatus();
+            alert('Credentials cleared.');
+        }
+    }
+
+    function updateCredentialStatus() {
+        const creds = getCredentials();
+        const status = document.getElementById('credStatus');
+        if (creds.masterKey && creds.accessKey) {
+            const masterHidden = creds.masterKey.substring(0, 10) + '••••••••••';
+            const accessHidden = creds.accessKey.substring(0, 10) + '••••••••••';
+            status.classList.remove('empty');
+            status.classList.add('ok');
+            status.innerHTML = `✓ Credentials stored<br><small style="font-size: 0.8rem;">Master: <span class="settings-masked">${masterHidden}</span><br>Access: <span class="settings-masked">${accessHidden}</span></small>`;
+        } else {
+            status.classList.remove('ok');
+            status.classList.add('empty');
+            status.innerHTML = 'No credentials stored';
+        }
+    }
+
+    // --- JSONBIN DEFAULTS MANAGEMENT ---
+    function getDefaultBinId() {
+        return DEFAULT_BIN_ID;
+    }
+
+    async function updateTeamRoster() {
+        // Admin function: save current state to the shared team bin
+        const creds = getCredentials();
+        if (!creds.masterKey || !creds.accessKey) {
+            alert('Please save your JSONBin credentials first in the Credentials section.');
+            return;
+        }
+
+        const state = {
+            order: currentRosterOrder.map(p => ({ name: p.name, pos: p.pos || '', number: p.number })),
+            fielding: fieldingData,
+            out: [...outPlayers]
+        };
+
+        try {
+            const res = await fetch(JSONBIN_API + '/' + DEFAULT_BIN_ID, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': creds.masterKey
+                },
+                body: JSON.stringify(state)
+            });
+
+            if (!res.ok) throw new Error('Save failed: ' + res.status + ' - ' + res.statusText);
+            alert('✓ Team roster updated!\n\nAll team members will see these changes when they sync.');
+        } catch(e) {
+            alert('Error updating roster: ' + e.message + '\n\nCheck your credentials and try again.');
+            console.error(e);
+        }
+    }
+
+    async function loadDefaultsManual() {
+        const creds = getCredentials();
+        const binId = getDefaultBinId();
+
+        if (!creds.accessKey) {
+            alert('Please save your JSONBin Access Key first.');
+            return;
+        }
+        if (!binId) {
+            alert('No default bin ID set. Create one by clicking "Save Current State as Default".');
+            return;
+        }
+
+        try {
+            const res = await fetch(JSONBIN_API + '/' + binId + '/latest', {
+                headers: { 'X-Access-Key': creds.accessKey }
+            });
+            if (!res.ok) throw new Error('Load failed: ' + res.status);
+            const data = await res.json();
+            applyState(data.record, false);
+            renderLineup();
+            renderFielding();
+            initSortable();
+            alert('✓ Defaults loaded from cloud!');
+        } catch(e) {
+            alert('Error loading defaults: ' + e.message);
+            console.error(e);
+        }
+    }
+
+    // --- PROMPT FOR CREDENTIALS ON FIRST LOAD ---
+    function showCredentialModal() {
+        const modal = document.getElementById('credentialModal');
+        if (modal) modal.classList.add('show');
+    }
+
+    function hideCredentialModal() {
+        const modal = document.getElementById('credentialModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    function submitModalCredentials() {
+        const masterKey = document.getElementById('modalMasterKey').value.trim();
+        const accessKey = document.getElementById('modalAccessKey').value.trim();
+        if (!masterKey || !accessKey) {
+            alert('Please enter both keys');
+            return;
+        }
+        localStorage.setItem('jsonbin_credentials', JSON.stringify({ masterKey, accessKey }));
+        updateCredentialStatus();
+        hideCredentialModal();
+    }
+</script>
+
+<!-- CREDENTIALS MODAL -->
+<div id="credentialModal" class="modal-overlay">
+    <div class="modal-dialog">
+        <h2>🔐 JSONBin.io Setup</h2>
+        <p>Welcome! To use cloud sync and default configuration, you'll need your JSONBin.io API keys.</p>
+        <p><strong>Visit <a href="https://jsonbin.io" target="_blank" style="color: var(--primary); font-weight: bold;">jsonbin.io</a> to get your keys:</strong></p>
+        <ol style="font-size: 0.9rem; color: #666; line-height: 1.6;">
+            <li>Create a free account (or log in)</li>
+            <li>Go to <strong>Account Settings</strong> (top-right menu)</li>
+            <li>Copy your <strong>Master Key</strong></li>
+            <li>Copy your <strong>Access Key</strong></li>
+            <li>Paste them below</li>
+        </ol>
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 6px; color: var(--primary); font-size: 0.9rem;">Master Key</label>
+                <input type="password" id="modalMasterKey" class="modal-input" placeholder="Paste your Master Key">
+            </div>
+            <div>
+                <label style="display: block; font-weight: bold; margin-bottom: 6px; color: var(--primary); font-size: 0.9rem;">Access Key</label>
+                <input type="password" id="modalAccessKey" class="modal-input" placeholder="Paste your Access Key">
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-primary" onclick="submitModalCredentials()">Save & Continue</button>
+            <button class="modal-btn modal-btn-secondary" onclick="hideCredentialModal()">Skip for Now</button>
+        </div>
+        <p style="font-size: 0.75rem; color: #999; margin-top: 15px; text-align: center;">
+            💡 Tip: You can update your keys anytime in Settings (⚙️ tab)
+        </p>
+    </div>
+</div>
+
+</body>
+</html>
