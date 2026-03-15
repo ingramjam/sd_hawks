@@ -1,0 +1,25 @@
+{
+  "order": [
+    { "name": "Ramzey Frantz", "number": "", "pos": "" },
+    { "name": "Eddie O'Connell", "number": "", "pos": "" },
+    { "name": "Reese Spady", "number": "", "pos": "" },
+    { "name": "Tayden Tabingo", "number": "", "pos": "" },
+    { "name": "Decian Riley", "number": "#19", "pos": "" },
+    { "name": "Rocco Smeyres", "number": "#29", "pos": "" },
+    { "name": "Jace Ingram", "number": "#45", "pos": "" },
+    { "name": "Tommy Cabral", "number": "#88", "pos": "" },
+    { "name": "Asher Cox", "number": "#9", "pos": "" }
+  ],
+  "fielding": {
+    "Ramzey Frantz": ["", "", "", "", "", ""],
+    "Eddie O'Connell": ["", "", "", "", "", ""],
+    "Reese Spady": ["", "", "", "", "", ""],
+    "Tayden Tabingo": ["", "", "", "", "", ""],
+    "Decian Riley": ["", "", "", "", "", ""],
+    "Rocco Smeyres": ["", "", "", "", "", ""],
+    "Jace Ingram": ["", "", "", "", "", ""],
+    "Tommy Cabral": ["", "", "", "", "", ""],
+    "Asher Cox": ["", "", "", "", "", ""]
+  },
+  "out": []
+}
