@@ -1,79 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>San Diego Hawks Game Bingo</title>
-    <style>
-        :root {
-            --primary: #002244; --secondary: #FFD700; --bg: #f4f4f4;
-        }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--primary); margin: 0; padding: 0; }
-        .container { max-width: 500px; margin: 0 auto; padding: 15px; }
-        .header-img { width: 100%; height: auto; display: block; margin-bottom: 10px; border-bottom: 4px solid var(--secondary); }
-        .back-link { display: inline-block; margin-bottom: 15px; color: var(--primary); text-decoration: none; font-weight: bold; font-size: 0.9rem; background: #e0e0e0; padding: 8px 14px; border-radius: 20px; }
-        .back-link:hover { background: #ccc; }
-        h2 { color: var(--primary); margin: 0 0 10px 0; text-align: center; }
-        .bingo-card { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; width: 100%; background: var(--primary); border: 3px solid var(--secondary); padding: 3px; border-radius: 8px; }
-        .bingo-square { background: #fff; padding: 2px; text-align: center; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; aspect-ratio: 1/1; border-radius: 2px; cursor: pointer; }
-        .bingo-square.checked { background: var(--secondary); color: var(--primary); }
-        .center-square { background-image: url("https://www.sandiegohawks.com/uploads/1/2/6/9/126967866/editor/hawks-logo-1_1.png"); background-size: 80%; background-repeat: no-repeat; background-position: center; background-color: white; pointer-events: none; }
-        .action-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px; background: var(--secondary); color: var(--primary); }
-        .donate-link { display: inline-block; color: var(--primary); text-decoration: none; font-weight: bold; font-size: 0.9rem; background: var(--secondary); padding: 8px 14px; border-radius: 20px; }
-        .donate-link:hover { background: #e6c200; }
-    </style>
-</head>
-<body>
-<img src="https://raw.githubusercontent.com/ingramjam/sd_hawks/main/hawks_banner.jpg" alt="Hawks Header" class="header-img">
-
-<!-- Donate OUTSIDE the container -->
-<div style="max-width: 500px; margin: 0 auto; padding: 15px;">
-    <a href="https://venmo.com/u/jwyld" target="_blank" class="donate-link">💛 Donate to the cause</a>
-</div>
-
-<!-- Bingo content in its own container -->
-<div class="container">
-    <div style="display:flex; flex-direction:column; align-items:center;">
-        <h2>Game Time Bingo!</h2>
-        <div class="bingo-card" id="bingoCard"></div>
-        <button class="action-btn" id="bingoResetBtn">New Card</button>
-    </div>
-</div>
-<script>
-    const baseballTerms = [ "Home Run", "My Kid Strikes Out","Dad Hungover", "Walk-In Run","Mom Hungover", "Out", "Foul Ball Out", "Double", "Coach crashes out","Triple", "Grand Slam", "Walk", "Pitcher Cries","Fan hit by foul ball", "Catcher Cries","Drop 3rd HR", "Gopher Hole", "My Kid Scored", "Pick Off", "Steal", "Error", "RBI", "Dad Kicked Out", "Terrible Call", "Tie Shoes", "Hit By Pitch", "No Glove On", "Oven Mitt", "No Game Balls", "Wild Pitch" ];
-
-    function createBingoCard(terms) {
-        const bingoCard = document.getElementById('bingoCard');
-        bingoCard.innerHTML = '';
-        let idx = 0;
-        for (let r = 0; r < 5; r++) {
-            for (let c = 0; c < 5; c++) {
-                const sq = document.createElement('div');
-                sq.classList.add('bingo-square');
-                if (r === 2 && c === 2) {
-                    sq.classList.add('center-square');
-                } else {
-                    sq.textContent = terms[idx++];
-                    sq.onclick = () => sq.classList.toggle('checked');
-                }
-                bingoCard.appendChild(sq);
-            }
-        }
-    }
-
-    function newBingoCard() {
-        let arr = [...baseballTerms].sort(() => 0.5 - Math.random());
-        localStorage.setItem('hawksBingoTerms', JSON.stringify(arr.slice(0, 24)));
-        createBingoCard(arr.slice(0, 24));
-    }
-
-    function initBingo() {
-        const savedTerms = localStorage.getItem('hawksBingoTerms');
-        if (savedTerms) createBingoCard(JSON.parse(savedTerms)); else newBingoCard();
-        document.getElementById('bingoResetBtn').addEventListener('click', newBingoCard);
-    }
-
-    initBingo();
-</script>
-</body>
-</html>
+<style>
+  .header-img {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto 10px auto;
+    height: auto;
+    object-fit: cover;
+    background-color: var(--primary);
+    border-bottom: 4px solid var(--secondary);
+  }
+</style>
