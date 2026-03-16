@@ -21,7 +21,8 @@
         #loadingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--text); font-size: 1.2rem; text-align: center; z-index: 2000; }
         .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .header-img { width: 100%; height: auto; display: block; margin-bottom: 10px; border-bottom: 4px solid var(--secondary); }
+        .banner-bar { background: #002244; width: 100%; text-align: center; border-bottom: 4px solid var(--secondary); margin-bottom: 10px; }
+        .header-img { max-width: 500px; max-height: 200px; width: 100%; height: auto; display: block; margin: 0 auto; }
 
         /* TABS */
         .nav-tabs { display: flex; background: var(--primary); padding: 5px; border-radius: 12px; margin-bottom: 15px; position: sticky; top: 5px; z-index: 100; gap: 3px; }
@@ -182,7 +183,9 @@
     </div>
 </div>
 
-<img src="https://raw.githubusercontent.com/ingramjam/sd_hawks/main/hawks_banner.jpg" alt="Hawks Header" class="header-img">
+<div class="banner-bar">
+    <img src="https://raw.githubusercontent.com/ingramjam/sd_hawks/main/hawks_banner.jpg" alt="Hawks Header" class="header-img">
+</div>
 
 <div class="container">
     <div class="nav-tabs">
