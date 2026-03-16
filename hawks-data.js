@@ -2,7 +2,7 @@
 
 // 1. RULE SET
 const hawksRules = [
-    { category: "Roster", title: "Team Size", content: "Roster: 10-13 players. Age: 13U.", important: false, source: "Appx F.1" },
+    { category: "Roster", title: "Team Size", content: "Roster: 10-13 players. Age: 11U.", important: false, source: "Appx F.1" },
     { category: "Game Time", title: "Duration & Limits", content: "Regulation: 7 innings. Complete: 4 innings. No new inning after 1 hr 50 mins. Hard stop 9:45 PM. Ties permitted.", important: true, source: "Appx F.3.A-B, F.9.C" },
     { category: "Roster & Batting", title: "Minimum Play", content: "No player sits 2 innings until all sit 1. No player sits 3 until all sit 2. No infield/outfield position requirement.", important: true, source: "Appx F.3.D" },
     { category: "Game Time", title: "Mercy Rule", content: "10 run lead after 5 complete innings (4 ½ if Home leads).", important: true, source: "Appx F.4" },
