@@ -53,5 +53,7 @@ const teamRoster = [
     { name: "Rocco Smeyres",     number: "#29", songUrl: "Rocco.mp3" },
     { name: "Jace Ingram",       number: "#45", songUrl: "Jace.mp3" },
     { name: "Tommy Cabral",      number: "#88", songUrl: "Tommy.mp3" },
-    { name: "Asher Cox",         number: "#9",  songUrl: "Asher.mp3" }
+    { name: "Asher Cox",         number: "#9",  songUrl: "Asher.mp3" },
+    { name: "Mason Ricciardi",   number: "#99", songUrl: "Mason.mp3" },
+    { name: "Charlie Pennington", number: "#44", songUrl: "Charlie.mp3" }
 ];
