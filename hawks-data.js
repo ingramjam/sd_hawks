@@ -57,5 +57,5 @@ const teamRoster = [
     { name: "Mason Ricciardi",   number: "#99", songUrl: "Mason.mp3" },
     { name: "Charlie Pennington", number: "#44", songUrl: "Charlie.mp3"},
     { name: "Preston Chavarria",  number: "", songUrl: "Preston.mp3" },
-    { name: "Dominic Montanari",  number: "#44", songUrl: "Dominic.mp3" }
+    { name: "Dominic Montanari",  number: "", songUrl: "Dominic.mp3" }
 ];
