@@ -284,6 +284,13 @@
 
         <!-- VENUE CARDS -->
         <div class="venue-card">
+            <h4>📍 Venue 0 — Peoria Sports Complex</h4>
+            <p>16101 N 83rd Ave, Peoria, AZ 85382</p>
+            <p>Event: <strong>Chicago White Sox vs. San Diego Padres (Spring Training)</strong> &nbsp;·&nbsp; Used: <strong>Thursday Mar 19</strong></p>
+            <a href="https://maps.google.com/?q=Peoria+Sports+Complex,+16101+N+83rd+Ave,+Peoria,+AZ+85382" target="_blank">🗺️ Open in Google Maps</a>
+        </div>
+
+        <div class="venue-card">
             <h4>📍 Venue 1 — Rio Vista Sports Complex Phase I</h4>
             <p>8800 Rio Vista Rd, Santee, CA 92071</p>
             <p>Field: <strong>Rio Vista #1</strong> &nbsp;·&nbsp; Used: <strong>Friday Mar 20</strong></p>
@@ -861,6 +868,9 @@
     
     // --- SCHEDULE DATA ---
     const scheduleEvents = [
+        { month: 'Thursday, March 19 — Peoria Sports Complex', events: [
+            { date: 'THU MAR 19', type: 'Special', opponent: '⚾ Chicago White Sox vs. San Diego Padres (Spring Training)', location: 'Peoria Sports Complex · 16101 N 83rd Ave, Peoria, AZ 85382', time: '6:10 PM – 9:10 PM', mapLink: 'https://maps.google.com/?q=Peoria+Sports+Complex,+16101+N+83rd+Ave,+Peoria,+AZ+85382', eventLink: 'https://www.peoriasportscomplex.com/Home/Components/Calendar/Event/29312/90' }
+        ]},
         { month: 'Friday, March 20 — Rio Vista Sports Complex Phase I', events: [
             { date: 'FRI MAR 20', type: 'Game', game: '#14', opponent: 'vs. Squires Baseball (CAS)', location: 'Rio Vista #1 · Rio Vista Sports Complex Phase I', time: '12:00 PM', mapLink: 'https://maps.google.com/?q=Rio+Vista+Sports+Complex,+8800+Rio+Vista+Rd,+Santee,+CA+92071' },
             { date: 'FRI MAR 20', type: 'Game', game: '#19', opponent: 'vs. Gameday Angels 11u – Smith (CO)', location: 'Rio Vista #1 · Rio Vista Sports Complex Phase I', time: '2:00 PM',  mapLink: 'https://maps.google.com/?q=Rio+Vista+Sports+Complex,+8800+Rio+Vista+Rd,+Santee,+CA+92071' }
@@ -896,6 +906,7 @@
                 if (event.location) html += `<div class="schedule-location">📍 ${event.location}</div>`;
                 html += `<div class="schedule-time">${event.time}</div>`;
                 if (event.mapLink) html += `<a class="schedule-map-link" href="${event.mapLink}" target="_blank">🗺️ Open in Google Maps</a>`;
+                if (event.eventLink) html += `<a class="schedule-map-link" href="${event.eventLink}" target="_blank">🎟️ Event Details</a>`;
                 html += `</div>`;
             });
         });
