@@ -737,13 +737,11 @@
         
         // 1. Calculate Sit Counts (exclude OUT players)
         let playerSits = {};
-        let minSits = 7; // Start high
         currentRosterOrder.forEach(p => {
             if (outPlayers.has(p.name)) return; // OUT players don't count toward bench fairness
             let data = fieldingData[p.name] || ["","","","","","",""];
             let sits = data.filter(pos => pos === "BN").length;
             playerSits[p.name] = sits;
-            if(sits < minSits) minSits = sits;
         });
 
         // 2. Dynamic bench count based on active player count
@@ -775,7 +773,7 @@
             // VALIDATION LOGIC
             let sits = playerSits[player.name] || 0;
             
-            let isSitViolator = (sits > minSits + 1) || (maxFairSits > 0 && sits > maxFairSits);
+            let isSitViolator = maxFairSits > 0 && sits > maxFairSits;
             
             if (isSitViolator) {
                 rowClass = "row-err";
