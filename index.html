@@ -135,6 +135,24 @@
         .schedule-type { font-weight: bold; color: #666; font-size: 0.95rem; }
         .schedule-location { font-size: 0.85rem; color: #999; margin: 4px 0; }
         .schedule-time { font-weight: bold; color: var(--secondary); font-size: 1rem; }
+        .schedule-game-num { font-size: 0.8rem; color: #888; float: right; font-weight: bold; }
+        .schedule-map-link { display: inline-block; margin-top: 6px; font-size: 0.85rem; color: var(--gc-blue); text-decoration: none; font-weight: bold; }
+        .schedule-map-link:hover { text-decoration: underline; }
+        /* TOURNAMENT INFO BANNER */
+        .tournament-banner { background: linear-gradient(135deg, var(--primary) 0%, #1a3a5c 100%); color: white; border-radius: 10px; padding: 16px; margin-bottom: 15px; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+        .tournament-banner h3 { margin: 0 0 6px 0; font-size: 1.1rem; color: #FFD700; }
+        .tournament-banner .tourney-division { font-size: 0.95rem; font-weight: bold; margin-bottom: 10px; color: #cde; }
+        .tournament-banner .tourney-links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .tournament-banner a { background: rgba(255,255,255,0.15); color: white; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
+        .tournament-banner a:hover { background: rgba(255,255,255,0.3); }
+        .venue-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 5px solid #FFD700; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .venue-card h4 { margin: 0 0 4px 0; font-size: 0.95rem; color: var(--primary); }
+        .venue-card p { margin: 2px 0; font-size: 0.85rem; color: #555; }
+        .venue-card a { color: var(--gc-blue); font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+        .venue-card a:hover { text-decoration: underline; }
+        .important-notes { background: #fff8e1; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 5px solid #FFC107; }
+        .important-notes h4 { margin: 0 0 8px 0; color: #b8860b; font-size: 0.95rem; }
+        .important-notes li { font-size: 0.85rem; color: #555; margin-bottom: 4px; }
         
         /* MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
@@ -252,9 +270,47 @@
     </div>
 
     <div id="view-schedule" class="view-section">
-        <div style="text-align: center; margin-bottom: 15px;">
-            <a href="https://www.sandiegohawks.com/" target="_blank" style="background: var(--gc-blue); color: white; text-decoration: none; padding: 12px 25px; border-radius: 20px; font-weight: bold; display: inline-block;">🦅 San Diego Hawks</a>
+
+        <!-- TOURNAMENT BANNER -->
+        <div class="tournament-banner">
+            <h3>🏆 USSSA Spring Tournament 2026</h3>
+            <div class="tourney-division">11U – AA &nbsp;|&nbsp; POOL E</div>
+            <div class="tourney-links">
+                <a href="https://baseball.usssa.com/tournaments" target="_blank">📋 USSSA Schedule</a>
+                <a href="https://www.usssa.com" target="_blank">🌐 USSSA.com</a>
+                <a href="https://www.sandiegohawks.com/" target="_blank">🦅 SD Hawks</a>
+            </div>
         </div>
+
+        <!-- VENUE CARDS -->
+        <div class="venue-card">
+            <h4>📍 Venue 1 — Rio Vista Sports Complex Phase I</h4>
+            <p>8800 Rio Vista Rd, Santee, CA 92071</p>
+            <p>Field: <strong>Rio Vista #1</strong> &nbsp;·&nbsp; Used: <strong>Friday Mar 20</strong></p>
+            <a href="https://maps.google.com/?q=Rio+Vista+Sports+Complex,+8800+Rio+Vista+Rd,+Santee,+CA+92071" target="_blank">🗺️ Open in Google Maps</a>
+        </div>
+
+        <div class="venue-card">
+            <h4>📍 Venue 2 — Pioneer Community Park</h4>
+            <p>1525 Pioneer Way, El Cajon, CA 92020</p>
+            <p>Fields: <strong>Pioneer #1 &amp; #2</strong> &nbsp;·&nbsp; Used: <strong>Saturday Mar 21</strong></p>
+            <a href="https://maps.google.com/?q=Pioneer+Community+Park,+1525+Pioneer+Way,+El+Cajon,+CA+92020" target="_blank">🗺️ Open in Google Maps</a>
+        </div>
+
+        <!-- IMPORTANT NOTES -->
+        <div class="important-notes">
+            <h4>⚠️ Important for Coaches &amp; Parents</h4>
+            <ul>
+                <li><strong>Check-in MANDATORY</strong> — 45 min before first game with tournament director. Pick up Game Card.</li>
+                <li><strong>Bring:</strong> Birth certificates / State ID + Proof of Insurance (correct coverage dates).</li>
+                <li><strong>All players must be on the online USSSA roster</strong> — register at <a href="https://www.usssa.com" target="_blank">usssa.com</a>.</li>
+                <li><strong>No steel cleats</strong> on portable mounds — pitchers must have extra shoes.</li>
+                <li><strong>Be ready 15 min early</strong> — games may start ahead of schedule.</li>
+                <li><strong>Check daily</strong> for schedule revisions; recheck brackets online the night before.</li>
+                <li>Pitching limits: <strong>6 inn/day, 8 inn/tournament</strong>. Pitcher must rest if &gt;3 inn in one day.</li>
+            </ul>
+        </div>
+
         <div id="scheduleContainer"></div>
     </div>
 
@@ -805,38 +861,12 @@
     
     // --- SCHEDULE DATA ---
     const scheduleEvents = [
-        { month: 'January 2026', events: [
-            { date: 'TUE 27', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '6:30 PM' },
-            { date: 'SAT 31', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '1:00 PM' }
+        { month: 'Friday, March 20 — Rio Vista Sports Complex Phase I', events: [
+            { date: 'FRI MAR 20', type: 'Game', game: '#14', opponent: 'vs. Squires Baseball (CAS)', location: 'Rio Vista #1 · Rio Vista Sports Complex Phase I', time: '12:00 PM', mapLink: 'https://maps.google.com/?q=Rio+Vista+Sports+Complex,+8800+Rio+Vista+Rd,+Santee,+CA+92071' },
+            { date: 'FRI MAR 20', type: 'Game', game: '#19', opponent: 'vs. Gameday Angels 11u – Smith (CO)', location: 'Rio Vista #1 · Rio Vista Sports Complex Phase I', time: '2:00 PM',  mapLink: 'https://maps.google.com/?q=Rio+Vista+Sports+Complex,+8800+Rio+Vista+Rd,+Santee,+CA+92071' }
         ]},
-        { month: 'February 2026', events: [
-            { date: 'TUE 3', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
-            { date: 'SAT 7', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '1:00 PM' },
-            { date: 'TUE 10', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
-            { date: 'SAT 14', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '1:00 PM' },
-            { date: 'TUE 24', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
-            { date: 'SAT 28', type: 'Game', opponent: 'vs. Rockies Bronco', location: 'EYB Fields at Kit Carson Park - Bronco', time: '5:15 PM' }
-        ]},
-        { month: 'March 2026', events: [
-            { date: 'TUE 3', type: 'Practice', opponent: '', location: 'Kit Carson Park', time: '5:30 PM' },
-            { date: 'SAT 7', type: 'Game', opponent: '@ Orioles', location: 'EYB Fields at Kit Carson Park - Bronco', time: '5:15 PM' },
-            { date: 'SUN 8', type: 'Special', opponent: 'Picture Day and Hit-a-Thon', location: 'TBD', time: 'All Day' },
-            { date: 'TUE 10', type: 'Game', opponent: 'vs. Athletics', location: 'EYB Fields at Kit Carson Park - Mustang', time: '7:00 PM' },
-            { date: 'SAT 14', type: 'Game', opponent: '@ Pirates', location: 'EYB Fields at Kit Carson Park - Bronco', time: '3:00 PM' },
-            { date: 'TUE 17', type: 'Game', opponent: 'vs. White Sox', location: 'EYB Fields at Kit Carson Park - Bronco', time: '4:45 PM' },
-            { date: 'SAT 21', type: 'Game', opponent: '@ Blue Jays', location: 'EYB Fields at Kit Carson Park - Bronco', time: '12:45 PM' },
-            { date: 'TUE 24', type: 'Game', opponent: 'vs. Angels', location: 'EYB Fields at Kit Carson Park - Mustang', time: '4:45 PM' },
-            { date: 'SAT 28', type: 'Game', opponent: 'vs. Rockies Bronco', location: 'EYB Fields at Kit Carson Park - Bronco', time: '10:30 AM' },
-            { date: 'TUE 31', type: 'Game', opponent: '@ Orioles', location: 'EYB Fields at Kit Carson Park - Bronco', time: '7:00 PM' }
-        ]},
-        { month: 'April 2026', events: [
-            { date: 'TUE 14', type: 'Game', opponent: 'vs. Athletics', location: 'EYB Fields at Kit Carson Park - Mustang', time: '7:00 PM' },
-            { date: 'SAT 18', type: 'Game', opponent: '@ Pirates', location: 'EYB Fields at Kit Carson Park - Bronco', time: '3:00 PM' },
-            { date: 'TUE 21', type: 'Game', opponent: 'vs. White Sox', location: 'EYB Fields at Kit Carson Park - Bronco', time: '4:45 PM' },
-            { date: 'SAT 25', type: 'Game', opponent: '@ Blue Jays', location: 'EYB Fields at Kit Carson Park - Bronco', time: '10:30 AM' }
-        ]},
-        { month: 'May 2026', events: [
-            { date: 'SUN 3', type: 'Special', opponent: 'Pony Day at the Padres!', location: 'TBD', time: 'All Day' }
+        { month: 'Saturday, March 21 — Pioneer Community Park', events: [
+            { date: 'SAT MAR 21', type: 'Game', game: '#37', opponent: 'vs. The Players 11U (AZ)', location: 'Pioneer #1 · Pioneer Community Park', time: '8:00 AM', mapLink: 'https://maps.google.com/?q=Pioneer+Community+Park,+1525+Pioneer+Way,+El+Cajon,+CA+92020' }
         ]}
     ];
     
@@ -858,12 +888,14 @@
                 else if (isSpecial) className += ' special';
                 
                 html += `<div class="${className}">`;
+                if (event.game) html += `<span class="schedule-game-num">Game ${event.game}</span>`;
                 html += `<div class="schedule-day">${event.date}</div>`;
                 const icon = isGame ? '⚾' : isPractice ? '🏃' : '🎉';
                 html += `<div class="schedule-type">${icon} ${event.type}</div>`;
                 if (event.opponent) html += `<div style="font-weight: bold; color: var(--primary); margin-top: 6px;">${event.opponent}</div>`;
                 if (event.location) html += `<div class="schedule-location">📍 ${event.location}</div>`;
                 html += `<div class="schedule-time">${event.time}</div>`;
+                if (event.mapLink) html += `<a class="schedule-map-link" href="${event.mapLink}" target="_blank">🗺️ Open in Google Maps</a>`;
                 html += `</div>`;
             });
         });
