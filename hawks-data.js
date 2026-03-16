@@ -48,12 +48,14 @@ const teamRoster = [
     { name: "Ramzey Frantz",     number: "",    songUrl: "Ramzey.mp3" },
     { name: "Eddie O'Connell",   number: "",    songUrl: "Eddie.mp3" },
     { name: "Reese Spady",       number: "",    songUrl: "Reese.mp3" },
-    { name: "Tayden Tabingo",    number: "",    songUrl: "Tayden.mp3" },
+    { name: "Liam Ibarra",       number: "22",  songUrl: "Liam.mp3" },
     { name: "Decian Riley",      number: "#19", songUrl: "Decian.mp3" },
     { name: "Rocco Smeyres",     number: "#29", songUrl: "Rocco.mp3" },
     { name: "Jace Ingram",       number: "#45", songUrl: "Jace.mp3" },
     { name: "Tommy Cabral",      number: "#77", songUrl: "Tommy.mp3" },
     { name: "Asher Cox",         number: "#9",  songUrl: "Asher.mp3" },
     { name: "Mason Ricciardi",   number: "#99", songUrl: "Mason.mp3" },
-    { name: "Charlie Pennington", number: "#44", songUrl: "Charlie.mp3" }
+    { name: "Charlie Pennington", number: "#44", songUrl: "Charlie.mp3"},
+    { name: "Preston Chavarria",  number: "", songUrl: "Preston.mp3" },
+    { name: "Dominic Montanari",  number: "#44", songUrl: "Dominic.mp3" }
 ];
