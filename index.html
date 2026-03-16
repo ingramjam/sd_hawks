@@ -211,7 +211,7 @@
         <div class="rule-card important" style="font-size: 0.85rem; padding: 10px;">
             <strong>Rules Active:</strong>
             <ul style="margin: 5px 0 0 15px; padding: 0;">
-                <li>No player sits 2 until all sit 1.</li>
+                <li>No benching play requirements.</li>
                 <li>No infield/outfield position requirement.</li>
                 <li id="benchCountNote" aria-live="polite"></li>
             </ul>
@@ -747,15 +747,12 @@
         // 2. Dynamic bench count based on active player count
         const activePlayers = Object.keys(playerSits).length;
         const benchPerInning = Math.max(0, activePlayers - 9);
-        const maxFairSits = (benchPerInning > 0 && activePlayers > 0)
-            ? Math.ceil((benchPerInning * 7) / activePlayers)
-            : 0;
         const benchNote = document.getElementById('benchCountNote');
         if (benchNote) {
             if (activePlayers <= 9) {
                 benchNote.textContent = `${activePlayers} active player${activePlayers !== 1 ? 's' : ''} – everyone fields every inning.`;
             } else {
-                benchNote.textContent = `${activePlayers} active players → ${benchPerInning} bench slot${benchPerInning !== 1 ? 's' : ''} per inning (max ${maxFairSits} sit${maxFairSits !== 1 ? 's' : ''} per player).`;
+                benchNote.textContent = `${activePlayers} active players → ${benchPerInning} bench slot${benchPerInning !== 1 ? 's' : ''} per inning.`;
             }
         }
 
@@ -770,17 +767,8 @@
             let rowClass = "";
             let statusHtml = "";
 
-            // VALIDATION LOGIC
-            let sits = playerSits[player.name] || 0;
-            
-            let isSitViolator = maxFairSits > 0 && sits > maxFairSits;
-            
-            if (isSitViolator) {
-                rowClass = "row-err";
-                statusHtml = `<span class="status-text stat-err">Sit violation</span>`;
-            } else {
-                statusHtml = `<span class="status-text stat-ok">Good</span>`;
-            }
+            // No benching requirements — all players are always Good
+            statusHtml = `<span class="status-text stat-ok">Good</span>`;
 
             html += `<tr class="${rowClass}"><td>${player.name}${statusHtml}</td>`;
             for(let i=0; i<7; i++) {

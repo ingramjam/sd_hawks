@@ -4,7 +4,7 @@
 const hawksRules = [
     { category: "Roster", title: "Team Size", content: "Roster: 10-13 players. Age: 13U.", important: false, source: "Appx F.1" },
     { category: "Game Time", title: "Duration & Limits", content: "Regulation: 7 innings. Complete: 4 innings. No new inning after 1 hr 50 mins. Hard stop 9:45 PM. Ties permitted.", important: true, source: "Appx F.3.A-B, F.9.C" },
-    { category: "Roster & Batting", title: "Minimum Play", content: "No player sits 2 innings until all sit 1. No player sits 3 until all sit 2. No infield/outfield position requirement.", important: true, source: "Appx F.3.D" },
+    { category: "Roster & Batting", title: "Minimum Play", content: "No benching play requirements. No infield/outfield position requirement.", important: true, source: "Appx F.3.D" },
     { category: "Game Time", title: "Mercy Rule", content: "10 run lead after 5 complete innings (4 ½ if Home leads).", important: true, source: "Appx F.4" },
     { category: "Pitching", title: "Daily Max Pitches", content: "Max 85 pitches/day. May finish batter if limit reached during AB.", important: true, source: "Appx F.5" },
     { category: "Pitching", title: "Rest Days (11-12)", content: "1-20: 0 Days | 21-35: 1 Day | 36-50: 2 Days | 51-65: 3 Days | 66+: 4 Days.", important: true, source: "Appx F.5 Table" },
