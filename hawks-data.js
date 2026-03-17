@@ -45,7 +45,7 @@ const pitchThresholds = [
 
 // 4. ROSTER
 const teamRoster = [
-    { name: "Ramzey Frantz",     number: "",    songUrl: "Ramzey.mp3" },
+    { name: "Ramzey Frantz",     number: "3",    songUrl: "Ramzey.mp3" },
     { name: "Eddie O'Connell",   number: "",    songUrl: "Eddie.mp3" },
     { name: "Reese Spady",       number: "",    songUrl: "Reese.mp3" },
     { name: "Liam Ibarra",       number: "22",  songUrl: "Liam.mp3" },
