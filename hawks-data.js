@@ -47,8 +47,8 @@ const pitchThresholds = [
 const teamRoster = [
     { name: "Ramzey Frantz",     number: "#3",    songUrl: "Ramzey.mp3" },
     { name: "Eddie O'Connell",   number: "",    songUrl: "Eddie.mp3" },
-    { name: "Reese Spady",       number: "",    songUrl: "Reese.mp3" },
-    { name: "Liam Ibarra",       number: "22",  songUrl: "Liam.mp3" },
+    { name: "Reese Spady",       number: "#35",    songUrl: "Reese.mp3" },
+    { name: "Liam Ibarra",       number: "#12",  songUrl: "Liam.mp3" },
     { name: "Decian Riley",      number: "#19", songUrl: "Decian.mp3" },
     { name: "Rocco Smeyres",     number: "#29", songUrl: "Rocco.mp3" },
     { name: "Jace Ingram",       number: "#45", songUrl: "Jace.mp3" },
